@@ -1,16 +1,17 @@
-import { useState } from 'react'
-import './App.css'
+import Fetch from "./Components/Fetch";
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import LoginPage from "./Components/LoginPage";
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <><Navbar /><Home /></>
+      element: <><Fetch/></>
     },
     {
       path: "/login",
-      element: <><Navbar /><Login /></>
-    },
+      element: <><LoginPage/></>
+    }
   ])
   return (
     <>
@@ -21,4 +22,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
