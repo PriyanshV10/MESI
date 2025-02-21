@@ -1,6 +1,5 @@
 import io
 import numpy as np
-import face_recognition
 import PIL.Image
 from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
@@ -9,6 +8,7 @@ from sqlalchemy.orm import Session
 from models import Person, MessEntry
 from schemas import BulkData
 from utils import json_decode_encoding, get_current_meal, allowed_match
+from deepface import DeepFace
 
 router = APIRouter()
 security = HTTPBasic()
@@ -26,26 +26,33 @@ def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Unauthorized")
     return credentials.username
 
+# Global list of known people loaded from the database on startup.
 known_people = []
 
 @router.post("/upload_frame")
 async def upload_frame(file: UploadFile = File(...), rfid: str = Form(None), db: Session = Depends(get_db)):
     contents = await file.read()
     image = np.array(PIL.Image.open(io.BytesIO(contents)).convert("RGB"))
-    face_locations = face_recognition.face_locations(image)
-    face_encodings = face_recognition.face_encodings(image, face_locations)
+    
+    # Use DeepFace to extract faces and compute their embeddings.
+    face_representations = DeepFace.represent(image, model_name="Facenet", detector_backend="opencv")
+    
     recognized = []
     now = datetime.utcnow()
     meal = get_current_meal(now)
-    for encoding in face_encodings:
+    
+    for rep in face_representations:
+        embedding = np.array(rep["embedding"])
         distances = []
         for person in known_people:
             known_encoding = json_decode_encoding(person.face_encoding)
-            dist = np.linalg.norm(known_encoding - encoding)
+            # Calculate the L2 (Euclidean) distance between embeddings.
+            dist = np.linalg.norm(known_encoding - embedding)
             distances.append(dist)
         if not distances:
             continue
         best_index = np.argmin(distances)
+        # If the distance is below a threshold (here 0.5), we consider it a match.
         if distances[best_index] < 0.5:
             person = known_people[best_index]
             if allowed_match(person.id, now, db):
@@ -55,7 +62,7 @@ async def upload_frame(file: UploadFile = File(...), rfid: str = Form(None), db:
             recognized.append({"name": person.name, "category": person.category})
         else:
             recognized.append({"name": "Unknown", "category": None})
-    return {"recognized": recognized, "face_count": len(face_encodings)}
+    return {"recognized": recognized, "face_count": len(face_representations)}
 
 @router.post("/bulk_data")
 def bulk_data(data: list[BulkData], db: Session = Depends(get_db)):
