@@ -1,13 +1,14 @@
 import io
 import numpy as np
+import cv2
 import PIL.Image
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 from models import Person, MessEntry
 from schemas import BulkData
-from utils import json_decode_encoding, get_current_meal, allowed_match
+from utils import json_decode_encoding, get_current_meal, allowed_match, cosine_distance
 from deepface import DeepFace
 
 router = APIRouter()
@@ -32,34 +33,45 @@ known_people = []
 @router.post("/upload_frame")
 async def upload_frame(file: UploadFile = File(...), rfid: str = Form(None), db: Session = Depends(get_db)):
     contents = await file.read()
-    image = np.array(PIL.Image.open(io.BytesIO(contents)).convert("RGB"))
+    # Open the image using PIL and convert it to an array.
+    pil_image = PIL.Image.open(io.BytesIO(contents)).convert("RGB")
+    image = np.array(pil_image)
+    # Convert from RGB (PIL) to BGR (as expected by DeepFace and OpenCV)
+    image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     
-    # Use DeepFace to extract faces and compute their embeddings.
-    face_representations = DeepFace.represent(image, model_name="Facenet", detector_backend="opencv")
+    # Use DeepFace to extract face representations.
+    # You may pass the BGR numpy array directly.
+    try:
+        face_representations = DeepFace.represent(image_bgr, model_name="Facenet", detector_backend="opencv", enforce_detection=False)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Face representation extraction failed: {e}")
     
     recognized = []
     now = datetime.utcnow()
     meal = get_current_meal(now)
     
+    # Tunable threshold for cosine distance matching (lower means more strict)
+    MATCH_THRESHOLD = 0.4
+    
     for rep in face_representations:
+        # Ensure the embedding is a numpy array.
         embedding = np.array(rep["embedding"])
-        distances = []
+        best_match = None
+        best_distance = 1.0  # cosine distance (1 means completely dissimilar)
         for person in known_people:
             known_encoding = json_decode_encoding(person.face_encoding)
-            # Calculate the L2 (Euclidean) distance between embeddings.
-            dist = np.linalg.norm(known_encoding - embedding)
-            distances.append(dist)
-        if not distances:
-            continue
-        best_index = np.argmin(distances)
-        # If the distance is below a threshold (here 0.5), we consider it a match.
-        if distances[best_index] < 0.5:
-            person = known_people[best_index]
-            if allowed_match(person.id, now, db):
-                entry = MessEntry(person_id=person.id, entry_time=now, meal_type=meal, source="video")
+            # Compute cosine distance between enrolled face and detected face.
+            dist = cosine_distance(known_encoding, embedding)
+            if dist < best_distance:
+                best_distance = dist
+                best_match = person
+        if best_match and best_distance < MATCH_THRESHOLD:
+            # Avoid duplicate entries within the time threshold.
+            if allowed_match(best_match.id, now, db):
+                entry = MessEntry(person_id=best_match.id, entry_time=now, meal_type=meal, source="video")
                 db.add(entry)
                 db.commit()
-            recognized.append({"name": person.name, "category": person.category})
+            recognized.append({"name": best_match.name, "category": best_match.category})
         else:
             recognized.append({"name": "Unknown", "category": None})
     return {"recognized": recognized, "face_count": len(face_representations)}
@@ -67,8 +79,12 @@ async def upload_frame(file: UploadFile = File(...), rfid: str = Form(None), db:
 @router.post("/bulk_data")
 def bulk_data(data: list[BulkData], db: Session = Depends(get_db)):
     for record in data:
-        entry = MessEntry(person_id=record.person_id, entry_time=record.entry_time,
-                          meal_type=record.meal_type, source=record.source)
+        entry = MessEntry(
+            person_id=record.person_id, 
+            entry_time=record.entry_time,
+            meal_type=record.meal_type, 
+            source=record.source
+        )
         db.add(entry)
     db.commit()
     return {"status": "bulk data inserted"}
@@ -114,3 +130,11 @@ def get_known_faces(db: Session = Depends(get_db)):
             "category": person.category
         })
     return {"people": result}
+
+# New endpoint for real-time count during the last 5 seconds.
+@router.get("/recent_entries")
+def recent_entries(db: Session = Depends(get_db)):
+    from datetime import datetime, timedelta
+    threshold = datetime.utcnow() - timedelta(seconds=5)
+    count = db.query(MessEntry).filter(MessEntry.entry_time >= threshold).count()
+    return {"recent_count": count}
