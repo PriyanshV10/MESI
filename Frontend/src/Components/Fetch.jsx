@@ -3,7 +3,9 @@ import Table from "./Table";
 import { da } from "@faker-js/faker";
 
 function Fetch({ filters, repeatedUpdates }) {
-  console.log(filters);
+  if (filters == null) return null;
+
+  console.log(filters, repeatedUpdates);
   const [data, setData] = useState([]);
   const interval = 5000;
   useEffect(() => {
@@ -47,4 +49,3 @@ function Fetch({ filters, repeatedUpdates }) {
 }
 
 export default Fetch;
-

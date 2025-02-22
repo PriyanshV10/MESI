@@ -14,7 +14,7 @@ const Home = () => {
     try {
       const response = await fetch("http://localhost:3000/api/mess");
       const records = await response.json();
-      setData(records); // Store all data
+      setData(records);
     } catch (error) {
       console.error("Error fetching data:", error);
     }

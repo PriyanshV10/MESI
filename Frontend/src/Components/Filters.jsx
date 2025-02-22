@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Fetch from "./Fetch";
+import Table from "./Table";
 
 const FilterTray = () => {
   const [filters, setFilters] = useState({
@@ -9,20 +9,88 @@ const FilterTray = () => {
     To: "",
     Meal: "",
   });
-  console.log(filters);
+
+  const [filteredData, setFilteredData] = useState([]);
   const [isClicked, setIsclicked] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
   };
 
-  const handleClick = (e) => {
+  const fetchDashboardData = async (e) => {
     e.preventDefault();
-    setIsclicked(true);
+
+    try {
+      const url = "https://precise-divine-lab.ngrok-free.app/dashboard";
+      const username = "admin@iiitkota.ac.in";
+      const password = "adminpassword";
+
+      const credentials = btoa(`${username}:${password}`);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch dashboard data: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const responseData = await response.json();
+      console.log("Raw Dashboard Data:", responseData);
+
+      if (!responseData.entries || !Array.isArray(responseData.entries)) {
+        throw new Error(
+          "Invalid response format: Expected an array of entries"
+        );
+      }
+
+      const filteredData = responseData.entries
+        .filter((entry) => {
+          const fromDate = filters.From ? new Date(filters.From) : null;
+          const toDate = filters.To ? new Date(filters.To) : null;
+          const entryDate = new Date(entry.entry_time);
+
+          return (
+            (!filters.Name ||
+              entry.name.toLowerCase().includes(filters.Name.toLowerCase())) &&
+            (!filters.Id || entry.person_id.toString() === filters.Id.trim()) &&
+            (!fromDate || entryDate >= fromDate) &&
+            (!toDate || entryDate <= toDate) &&
+            (!filters.Meal ||
+              entry.meal_type.toLowerCase() === filters.Meal.toLowerCase())
+          );
+        })
+        .map((entry) => ({
+          ...entry,
+          entry_time: new Date(entry.entry_time).toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          }),
+        }));
+
+      console.log("Filtered Data:", filteredData);
+      setFilteredData(filteredData);
+      setIsclicked(true);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
   };
+
   return (
     <>
-      <form onSubmit={handleClick}>
+      <form onSubmit={fetchDashboardData}>
         <div className="p-6 bg-white shadow-lg rounded-lg border border-blue-500 max-w-3xl mx-auto my-10">
           <h3 className="text-2xl font-semibold text-blue-600 mb-6 text-center">
             Filter Options
@@ -78,7 +146,6 @@ const FilterTray = () => {
                 value={filters.From}
                 onChange={handleChange}
                 className="border border-blue-400 p-2 rounded-md w-full focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                required
               />
             </div>
 
@@ -90,7 +157,6 @@ const FilterTray = () => {
                 To Date
               </label>
               <input
-                required
                 type="date"
                 name="To"
                 id="To"
@@ -117,7 +183,9 @@ const FilterTray = () => {
                 <option value="">Select Meal</option>
                 <option value="Breakfast">Breakfast</option>
                 <option value="Lunch">Lunch</option>
+                <option value="Snacks">Snacks</option>
                 <option value="Dinner">Dinner</option>
+                <option value="Dinner">off</option>
               </select>
             </div>
           </div>
@@ -130,7 +198,8 @@ const FilterTray = () => {
           </button>
         </div>
       </form>
-      {isClicked && <Fetch filters={filters} repeatedUpdates={false} />}
+
+      {isClicked && <Table data={filteredData} />}
     </>
   );
 };
