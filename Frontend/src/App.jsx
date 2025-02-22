@@ -31,11 +31,10 @@ function App() {
   ])
   return (
     <>
-      
-      <RouterProvider router={router} />
-
+      <FilterTray />
+      <Fetch />
     </>
-  )
+  );
 }
 
 export default App;

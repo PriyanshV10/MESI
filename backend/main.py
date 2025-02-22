@@ -13,6 +13,7 @@ app.include_router(router)
 
 @app.on_event("startup")
 def startup_event():
+    # Load face encodings into the database from the enrollment folder.
     load_faces_from_directory("faces")
     db = SessionLocal()
     kp = db.query(Person).all()
