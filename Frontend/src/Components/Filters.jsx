@@ -9,7 +9,7 @@ const FilterTray = () => {
     To: "",
     Meal: "",
   });
-
+  console.log(filters)
   const [isClicked, setIsclicked] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,6 +20,7 @@ const FilterTray = () => {
     setIsclicked(true);
   };
   return (
+    <>
     <div className="p-6 bg-white shadow-lg rounded-lg border border-orange-500 max-w-3xl mx-auto my-10">
       <h3 className="text-2xl font-semibold text-orange-600 mb-6 text-center">
         Filter Options
@@ -123,8 +124,9 @@ const FilterTray = () => {
       >
         Apply Filters
       </button>
-      {isClicked && <Fetch filters={filters} />}
     </div>
+      {isClicked && <Fetch filters={filters} />}
+    </>
   );
 };
 

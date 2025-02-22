@@ -27,7 +27,7 @@ function App() {
     },
     {
       path: "/table",
-      element: <><Navbar/> <Details/></>
+      element: <><Navbar/> <FilterTray /><Fetch/></>
     }
   ])
   return (
