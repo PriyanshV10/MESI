@@ -31,8 +31,7 @@ function App() {
   ])
   return (
     <>
-      <FilterTray />
-      <Fetch />
+      <RouterProvider router={router} />
     </>
   );
 }
