@@ -5,12 +5,13 @@ import Navbar from "./Components/Navbar";
 import Home from "./Components/Home";
 import Table from "./Components/Table";
 import Details from "./Components/Details";
+import FilterTray from "./Components/Filters";
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <><Fetch/></>
+      element: <><FilterTray /><Fetch/></>
     },
     {
       path: "/login",
