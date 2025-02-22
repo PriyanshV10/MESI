@@ -1,25 +1,12 @@
 import Fetch from "./Components/Fetch";
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import LoginPage from "./Components/LoginPage";
-
+import FilterTray from "./Components/Filters";
 function App() {
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <><Fetch/></>
-    },
-    {
-      path: "/login",
-      element: <><LoginPage/></>
-    }
-  ])
   return (
     <>
-      
-      <RouterProvider router={router} />
-
+      <FilterTray />
+      <Fetch />
     </>
-  )
+  );
 }
 
 export default App;
