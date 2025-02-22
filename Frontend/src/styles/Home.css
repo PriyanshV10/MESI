@@ -1,9 +1,10 @@
 :root {
     --color-orange: #f97316;
+    --color-blue: #1D4ED8;
 }
 
 .box {
-    border: 3px solid var(--color-orange);
+    border: 3px solid var(--color-blue);
     width: 200px;
     height: 180px;
     border-radius: 16px;
@@ -16,7 +17,7 @@
 }
 
 .box:hover {
-    background-color: rgb(255, 200, 0);
+    background-color: rgb(0, 200, 255);
     color: white;
     transform: scale(1.05);
 }

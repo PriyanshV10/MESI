@@ -13,7 +13,7 @@ const Navbar = () => {
         {["Home", "Table", "Connect Camera"].map((name, index) => (
           <NavLink
             key={index}
-            to={`/${name.replaceAll(" ","-")}`}
+            to={`/${name.replaceAll(" ","-").toLowerCase()}`}
             className={({ isActive }) =>
               `relative px-4 py-2 rounded-md transition duration-300 hover:bg-blue-600 ${
                 isActive ? "bg-blue-800" : ""

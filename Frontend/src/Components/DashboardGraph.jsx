@@ -20,8 +20,8 @@ const DashboardGraph = ({ data }) => {
       {
         label: "Number of People",
         data: [],
-        backgroundColor: "#f97316", // Bar color (orange)
-        borderColor: "#f97316", // Border color (orange)
+        backgroundColor: "#00c8ff", // Bar color (orange)
+        borderColor: "#206efb", // Border color (orange)
         borderWidth: 1,
       },
     ],
@@ -62,8 +62,8 @@ const DashboardGraph = ({ data }) => {
         {
           label: "Number of People",
           data: peopleCount, // Updated number of people
-          backgroundColor: "#f97316", // Bar color (orange)
-          borderColor: "#f97316", // Border color (orange)
+          backgroundColor: "#00c8ff", // Bar color (orange)
+          borderColor: "#206efb", // Border color (orange)
           borderWidth: 1,
         },
       ],
