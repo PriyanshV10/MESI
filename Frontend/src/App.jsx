@@ -6,12 +6,14 @@ import Home from "./Components/Home";
 import Table from "./Components/Table";
 import Details from "./Components/Details";
 import FilterTray from "./Components/Filters";
+import WebcamCapture from "./Components/Webcam";
+import UploadPhotos from "./Components/UploadPhotos";
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <><FilterTray /><Fetch/></>
+      element: <><FilterTray /><Fetch/> <UploadPhotos /></>
     },
     {
       path: "/login",
