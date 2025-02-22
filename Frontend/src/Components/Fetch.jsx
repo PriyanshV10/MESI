@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Table from "./Table";
 
 // function Fetch({ Filters }) {
+//   const [data, setData] = useState([]);
 //   useEffect(() => {
 //     const fetchdata = async () => {
 //       try {
@@ -21,18 +22,20 @@ import Table from "./Table";
 //         if (response.ok) {
 //           console.log("Signal connected");
 //         }
-//         const data = await response.json();
-//         console.log(data);
+//         const temp = await response.json();
+//         setData(temp);
+//         console.log(temp);
 //       } catch (error) {
 //         console.error("Error fetching data: ", error);
 //       }
 //     };
 //     fetchdata();
 //   }, [Filters]);
+//   console.log(data);
+//   return <Table data={data} />;
 // }
 
 // export default Fetch;
-// }
 
 export default function Fetch() {
   const data = [
@@ -57,7 +60,6 @@ export default function Fetch() {
     { name: "Rohit Chauhan", id: "S119", time: "09:45 AM" },
     { name: "Isha Malhotra", id: "S120", time: "09:50 AM" },
   ];
-  
 
   return <Table data={data} />;
 }
