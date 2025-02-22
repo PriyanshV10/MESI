@@ -42,62 +42,30 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
         if not upload_file:
             raise HTTPException(status_code=400, detail="No file uploaded")
         file_content = await upload_file.read()
-        try:
-            pil_image = PIL.Image.open(io.BytesIO(file_content)).convert("RGB")
-        except Exception as e:
-            raise HTTPException(status_code=400, detail="Image processing error")
-        barcodes = decode(pil_image)
-        if barcodes:
-            barcode_data = barcodes[0].data.decode("utf-8")
-            person = db.query(Person).filter(Person.college_id == barcode_data).first()
-            meal = get_current_meal(now)
-            if person:
-                existing_entry = db.query(MessEntry).filter(
-                    MessEntry.person_id == person.id,
-                    MessEntry.meal_type == meal,
-                    MessEntry.entry_time >= now - timedelta(minutes=DUPLICATE_ENTRY_THRESHOLD_MINUTES)
-                ).order_by(MessEntry.entry_time.asc()).first()
-                if existing_entry is None:
-                    entry = MessEntry(person_id=person.id, entry_time=now, meal_type=meal, source="barcode")
-                    db.add(entry)
-                    db.commit()
-                response = {
-                    "recognized": {
-                        "name": person.name,
-                        "category": person.category,
-                        "college_id": barcode_data,
-                        "entry_time": now.isoformat()
-                    },
-                    "source": "barcode"
-                }
-            else:
-                response = {
-                    "recognized": {
-                        "name": "Unknown",
-                        "category": None,
-                        "college_id": barcode_data,
-                        "entry_time": now.isoformat()
-                    },
-                    "source": "barcode"
-                }
-            return response
-        else:
-            image = np.array(pil_image)
     elif "application/json" in content_type:
         data = await request.json()
         img_base64 = data.get("image")
         if not img_base64:
             raise HTTPException(status_code=400, detail="No image provided")
+        if img_base64.startswith("data:"):
+            img_base64 = img_base64.split("base64,")[-1]
         try:
             file_content = base64.b64decode(img_base64)
-            pil_image = PIL.Image.open(io.BytesIO(file_content)).convert("RGB")
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Image processing error")
-        barcodes = decode(pil_image)
-        if barcodes:
-            barcode_data = barcodes[0].data.decode("utf-8")
-            person = db.query(Person).filter(Person.college_id == barcode_data).first()
-            meal = get_current_meal(now)
+            raise HTTPException(status_code=400, detail="Image decoding error")
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported content type")
+    try:
+        pil_image = PIL.Image.open(io.BytesIO(file_content)).convert("RGB")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Image processing error")
+    barcodes = decode(pil_image)
+    if barcodes:
+        barcode_data_list = [barcode.data.decode("utf-8") for barcode in barcodes]
+        recognized_list = []
+        meal = get_current_meal(now)
+        for data in barcode_data_list:
+            person = db.query(Person).filter(Person.college_id == data).first()
             if person:
                 existing_entry = db.query(MessEntry).filter(
                     MessEntry.person_id == person.id,
@@ -108,30 +76,21 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
                     entry = MessEntry(person_id=person.id, entry_time=now, meal_type=meal, source="barcode")
                     db.add(entry)
                     db.commit()
-                response = {
-                    "recognized": {
-                        "name": person.name,
-                        "category": person.category,
-                        "college_id": barcode_data,
-                        "entry_time": now.isoformat()
-                    },
-                    "source": "barcode"
-                }
+                recognized_list.append({
+                    "name": person.name,
+                    "category": person.category,
+                    "college_id": data,
+                    "entry_time": now.isoformat()
+                })
             else:
-                response = {
-                    "recognized": {
-                        "name": "Unknown",
-                        "category": None,
-                        "college_id": barcode_data,
-                        "entry_time": now.isoformat()
-                    },
-                    "source": "barcode"
-                }
-            return response
-        else:
-            image = np.array(pil_image)
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported content type")
+                recognized_list.append({
+                    "name": "Unknown",
+                    "category": None,
+                    "college_id": data,
+                    "entry_time": now.isoformat()
+                })
+        return {"recognized": recognized_list, "source": "barcode"}
+    image = np.array(pil_image)
     if len(image.shape) == 3 and image.shape[2] == 3:
         image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     elif len(image.shape) == 2 or (len(image.shape) == 3 and image.shape[2] == 1):
@@ -148,6 +107,8 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Face representation extraction failed: {e}")
+    if not face_representations or all(rep.get("face_confidence", 0) < 0.5 for rep in face_representations):
+        return {"recognized": "No face detected", "face_count": 0}
     recognized = []
     meal = get_current_meal(now)
     for rep in face_representations:
@@ -180,7 +141,11 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
                 "first_seen_time": first_seen_time.isoformat()
             })
         else:
-            recognized.append({"name": "Unknown", "category": None, "first_seen_time": now.isoformat()})
+            recognized.append({
+                "name": "Unknown",
+                "category": None,
+                "first_seen_time": now.isoformat()
+            })
     return {"recognized": recognized, "face_count": len(face_representations)}
 
 @router.post("/enroll")
@@ -253,7 +218,7 @@ def rfid_entry(rfid: str = Form(...), db: Session = Depends(get_db)):
         db.commit()
     return {"status": "RFID entry logged", "name": person.name}
 
-@router.get("/dashboard")
+@router.post("/dashboard")
 def dashboard(username: str = Depends(verify_admin), db: Session = Depends(get_db)):
     entries = db.query(MessEntry).all()
     result = []
@@ -262,7 +227,7 @@ def dashboard(username: str = Depends(verify_admin), db: Session = Depends(get_d
         result.append({"entry_id": entry.id, "person_id": entry.person_id, "name": person.name if person else "Unknown", "meal_type": entry.meal_type, "entry_time": entry.entry_time.isoformat(), "source": entry.source})
     return {"entries": result}
 
-@router.get("/known_faces")
+@router.post("/known_faces")
 def get_known_faces(db: Session = Depends(get_db)):
     people = db.query(Person).all()
     result = []
@@ -270,13 +235,13 @@ def get_known_faces(db: Session = Depends(get_db)):
         result.append({"id": person.id, "college_id": person.college_id, "name": person.name, "category": person.category})
     return {"people": result}
 
-@router.get("/recent_entries")
+@router.post("/recent_entries")
 def recent_entries(db: Session = Depends(get_db)):
     threshold = datetime.utcnow() - timedelta(seconds=5)
     count = db.query(MessEntry).filter(MessEntry.entry_time >= threshold).count()
     return {"recent_count": count}
 
-@router.get("/meal_summary")
+@router.post("/meal_summary")
 def meal_summary(db: Session = Depends(get_db)):
     now = datetime.utcnow()
     meal = get_current_meal(now)

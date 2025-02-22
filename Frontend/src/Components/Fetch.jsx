@@ -4,7 +4,8 @@ import { da } from "@faker-js/faker";
 
 function Fetch({ filters, repeatedUpdates }) {
   if (filters == null) return null;
-  console.log(filters);
+
+  console.log(filters, repeatedUpdates);
   const [data, setData] = useState([]);
   const interval = 5000;
   useEffect(() => {
