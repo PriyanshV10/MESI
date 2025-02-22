@@ -18,8 +18,8 @@ function App() {
       element: <><LoginPage/></>
     },
     {
-      path: "/nav",
-      element: <><Navbar/></>
+      path: "/connect",
+      element: <><Navbar/> <h1 className="text-center">Camera Connected</h1></>
     },
     {
       path: "/home",

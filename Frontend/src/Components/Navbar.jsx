@@ -29,6 +29,16 @@ const Navbar = () => {
         >
           Table
         </NavLink>
+        <NavLink
+          to="/connect"
+          className={({ isActive }) =>
+            `relative transition duration-300 hover:text-gray-200 ${
+              isActive ? "underline decoration-2 underline-offset-4" : ""
+            }`
+          }
+        >
+          Connect Camera
+        </NavLink>
       </ul>
 
       {/* Account Section */}
