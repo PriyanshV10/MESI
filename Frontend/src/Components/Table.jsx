@@ -1,6 +1,14 @@
 import "../styles/Tables.css";
 
 function Table({ data }) {
+
+  if (data.length === 0 || data === null) {
+    return (
+      <p className="flex justify-center h-screen text-xl text-gray-600">
+        Nothing to fetch
+      </p>
+    );
+  }
   const headings = Object.keys(data[0]);
 
   return (
@@ -9,7 +17,7 @@ function Table({ data }) {
         <thead className="text-xs uppercase bg-orange-500 text-white">
           <tr>
             {headings.map((header, index) => (
-              <th key={data[index].id} className="px-8 py-4 text-md">
+              <th key={header} className="px-8 py-4 text-md">
                 {header}
               </th>
             ))}
@@ -18,7 +26,7 @@ function Table({ data }) {
         <tbody>
           {data.map((row, rowIndex) => (
             <tr
-              key={data[rowIndex].id}
+              key={row.id || rowIndex}
               className="bg-white border-b border-orange-300 hover:bg-orange-100"
             >
               {headings.map((header, cellIndex) => (
