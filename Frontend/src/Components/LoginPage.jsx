@@ -1,6 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (username === "admin@iiitkota" && password === "admin") {
+      navigate("/home"); // Redirect to /home
+    } else {
+      alert("Invalid username or password");
+    }
+  };
+
   return (
     <>
       <section className="bg-orange-400 min-h-dvh">
@@ -13,7 +28,7 @@ const LoginPage = () => {
               <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
                 Sign in to your account
               </h1>
-              <form className="space-y-4 md:space-y-6" action="#">
+              <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label
                     htmlFor="email"
@@ -27,7 +42,9 @@ const LoginPage = () => {
                     id="email"
                     className="bg-gray-50 border border-orange-500 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                     placeholder="username"
-                    required=""
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
                 <div>
@@ -42,8 +59,10 @@ const LoginPage = () => {
                     name="password"
                     id="password"
                     placeholder="••••••••"
-                    className="bg-gray-50 border border-orange-500 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 "
-                    required=""
+                    className="bg-gray-50 border border-orange-500 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -53,34 +72,33 @@ const LoginPage = () => {
                         id="remember"
                         aria-describedby="remember"
                         type="checkbox"
-                        className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 "
-                        required
+                        className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300"
                       />
                     </div>
                     <div className="ml-3 text-sm">
-                      <label htmlFor="remember" className="text-gray-600 ">
+                      <label htmlFor="remember" className="text-gray-600">
                         Remember me
                       </label>
                     </div>
                   </div>
                   <a
                     href="#"
-                    className="text-sm font-medium text-primary-600 hover:underline "
+                    className="text-sm font-medium text-primary-600 hover:underline"
                   >
                     Forgot password?
                   </a>
                 </div>
                 <button
                   type="submit"
-                  className="w-full text-white bg-orange-500 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+                  className="w-full text-white bg-orange-500 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
                 >
                   Sign in
                 </button>
-                <p className="text-sm font-light text-gray-500 ">
+                <p className="text-sm font-light text-gray-500">
                   Don’t have an account yet?{" "}
                   <a
                     href="#"
-                    className="font-medium text-primary-600 hover:underline "
+                    className="font-medium text-primary-600 hover:underline"
                   >
                     Sign up
                   </a>

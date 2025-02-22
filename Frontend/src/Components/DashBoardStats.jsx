@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const DashboardStats = () => {
+const DashboardStats = ({ data }) => {
   const [stats, setStats] = useState({
     breakfast: 0,
     lunch: 0,
@@ -11,49 +11,29 @@ const DashboardStats = () => {
   // Function to get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    return today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
   };
 
-  // Fetch the stats data from the API
-  const fetchStats = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/api/mess"); // Replace with your API endpoint
-      const data = await response.json();
-      
-      // Get today's date
-      const todayDate = getTodayDate();
-
-      // Filter the data to include only today's records
-      const todayData = data.filter((item) => item.date === todayDate);
-
-      // Calculate the statistics based on the filtered data
-      const breakfastCount = todayData.filter((item) => item.mealType === "breakfast").length;
-      const lunchCount = todayData.filter((item) => item.mealType === "lunch").length;
-      const dinnerCount = todayData.filter((item) => item.mealType === "dinner").length;
-      const snacksCount = todayData.filter((item) => item.mealType === "snacks").length;
-      
-      setStats({
-        breakfast: breakfastCount,
-        lunch: lunchCount,
-        dinner: dinnerCount,
-        snacks: snacksCount,
-      });
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  // Fetch data initially and then every 5 seconds
   useEffect(() => {
-    // Fetch the initial data
-    fetchStats();
+    // Get today's date
+    const todayDate = getTodayDate();
 
-    // Set an interval to update every 5 seconds
-    const intervalId = setInterval(fetchStats, 5000);
+    // Filter the data to include only today's records
+    const todayData = data.filter((item) => item.date === todayDate);
 
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
+    // Calculate the statistics based on the filtered data
+    const breakfastCount = todayData.filter((item) => item.mealType === "breakfast").length;
+    const lunchCount = todayData.filter((item) => item.mealType === "lunch").length;
+    const dinnerCount = todayData.filter((item) => item.mealType === "dinner").length;
+    const snacksCount = todayData.filter((item) => item.mealType === "snacks").length;
+
+    setStats({
+      breakfast: breakfastCount,
+      lunch: lunchCount,
+      dinner: dinnerCount,
+      snacks: snacksCount,
+    });
+  }, [data]);
 
   return (
     <div className="w-full flex flex-col items-center text-center px-4 py-8">

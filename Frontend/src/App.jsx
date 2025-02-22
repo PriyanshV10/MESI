@@ -1,10 +1,9 @@
 import Fetch from "./Components/Fetch";
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import LoginPage from "./Components/LoginPage";
 import Navbar from "./Components/Navbar";
 import Home from "./Components/Home";
 import Table from "./Components/Table";
-import Details from "./Components/Details";
 import FilterTray from "./Components/Filters";
 import WebcamCapture from "./Components/Webcam";
 import UploadPhotos from "./Components/UploadPhotos";
@@ -14,7 +13,7 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <><LoginPage/></>
+      element: <><Navigate to="/login"/></>
     },
     {
       path: "/login",

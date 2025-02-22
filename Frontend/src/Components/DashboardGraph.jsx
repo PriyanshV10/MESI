@@ -13,7 +13,7 @@ import {
 // Register necessary Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const DashboardGraph = () => {
+const DashboardGraph = ({ data }) => {
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
@@ -43,61 +43,33 @@ const DashboardGraph = () => {
     return days;
   };
 
-  // Function to fetch updated data
-  const fetchData = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/api/mess");
-      const records = await response.json();
-      console.log("Fetched data:", records); // Log the fetched data
-
-      const days = getLastSevenDays();
-      console.log("Days in the last 7 days:", days); // Log the last 7 days
-
-      const peopleCount = Array(7).fill(0); // Array for the last 7 days
-
-      // Assuming the data from the API contains meal records
-      records.forEach((record) => {
-        console.log(`Comparing ${record.date} with days:`, days); // Log each record date and days array
-        const dayIndex = days.indexOf(record.date); // Find the index of the date in the days array
-        if (dayIndex !== -1) {
-          peopleCount[dayIndex] += 1; // Increment people count for the day
-        }
-      });
-
-      // Update the chart data
-      setChartData({
-        labels: days,
-        datasets: [
-          {
-            label: "Number of People",
-            data: peopleCount, // Updated number of people
-            backgroundColor: "#f97316", // Bar color (orange)
-            borderColor: "#f97316", // Border color (orange)
-            borderWidth: 1,
-          },
-        ],
-      });
-
-      console.log("Updated chart data:", peopleCount); // Log the updated data
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  // Fetch data every 5 seconds
   useEffect(() => {
-    console.log("Fetching data for the first time...");
-    fetchData(); // Initial fetch
-    const intervalId = setInterval(() => {
-      console.log("Fetching data every 5 seconds...");
-      fetchData(); // Fetch data every 5 seconds
-    }, 5000); // 5 seconds interval
+    const days = getLastSevenDays();
+    const peopleCount = Array(7).fill(0); // Array for the last 7 days
 
-    // Clean up the interval when the component is unmounted
-    return () => clearInterval(intervalId);
-  }, []);
+    // Assuming the data from the API contains meal records
+    data.forEach((record) => {
+      const dayIndex = days.indexOf(record.date); // Find the index of the date in the days array
+      if (dayIndex !== -1) {
+        peopleCount[dayIndex] += 1; // Increment people count for the day
+      }
+    });
 
-  // Options for the bar chart
+    // Update the chart data
+    setChartData({
+      labels: days,
+      datasets: [
+        {
+          label: "Number of People",
+          data: peopleCount, // Updated number of people
+          backgroundColor: "#f97316", // Bar color (orange)
+          borderColor: "#f97316", // Border color (orange)
+          borderWidth: 1,
+        },
+      ],
+    });
+  }, [data]);
+
   const options = {
     responsive: true,
     scales: {
