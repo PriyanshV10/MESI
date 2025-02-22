@@ -36,8 +36,6 @@ def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
 async def upload_frame(request: Request, db: Session = Depends(get_db)):
     content_type = request.headers.get("content-type", "")
     now = datetime.utcnow()
-
-    # Extract file content based on content type
     if "multipart/form-data" in content_type:
         form = await request.form()
         upload_file = form.get("file")
@@ -57,62 +55,48 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Image decoding error")
     else:
         raise HTTPException(status_code=400, detail="Unsupported content type")
-
-    # Decode the image using PIL
     try:
         pil_image = PIL.Image.open(io.BytesIO(file_content)).convert("RGB")
     except Exception as e:
         raise HTTPException(status_code=400, detail="Image processing error")
-
-    # Try barcode detection
     barcodes = decode(pil_image)
     if barcodes:
-        barcode_data = barcodes[0].data.decode("utf-8")
-        person = db.query(Person).filter(Person.college_id == barcode_data).first()
+        barcode_data_list = [barcode.data.decode("utf-8") for barcode in barcodes]
+        recognized_list = []
         meal = get_current_meal(now)
-        if person:
-            existing_entry = db.query(MessEntry).filter(
-                MessEntry.person_id == person.id,
-                MessEntry.meal_type == meal,
-                MessEntry.entry_time >= now - timedelta(minutes=DUPLICATE_ENTRY_THRESHOLD_MINUTES)
-            ).order_by(MessEntry.entry_time.asc()).first()
-            if existing_entry is None:
-                entry = MessEntry(person_id=person.id, entry_time=now, meal_type=meal, source="barcode")
-                db.add(entry)
-                db.commit()
-            response = {
-                "recognized": {
+        for data in barcode_data_list:
+            person = db.query(Person).filter(Person.college_id == data).first()
+            if person:
+                existing_entry = db.query(MessEntry).filter(
+                    MessEntry.person_id == person.id,
+                    MessEntry.meal_type == meal,
+                    MessEntry.entry_time >= now - timedelta(minutes=DUPLICATE_ENTRY_THRESHOLD_MINUTES)
+                ).order_by(MessEntry.entry_time.asc()).first()
+                if existing_entry is None:
+                    entry = MessEntry(person_id=person.id, entry_time=now, meal_type=meal, source="barcode")
+                    db.add(entry)
+                    db.commit()
+                recognized_list.append({
                     "name": person.name,
                     "category": person.category,
-                    "college_id": barcode_data,
+                    "college_id": data,
                     "entry_time": now.isoformat()
-                },
-                "source": "barcode"
-            }
-        else:
-            response = {
-                "recognized": {
+                })
+            else:
+                recognized_list.append({
                     "name": "Unknown",
                     "category": None,
-                    "college_id": barcode_data,
+                    "college_id": data,
                     "entry_time": now.isoformat()
-                },
-                "source": "barcode"
-            }
-        return response
-
-    # If no barcode detected, convert PIL image to Numpy array for further processing.
+                })
+        return {"recognized": recognized_list, "source": "barcode"}
     image = np.array(pil_image)
-
-    # Convert the image to BGR format as required by the face recognition module
     if len(image.shape) == 3 and image.shape[2] == 3:
         image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     elif len(image.shape) == 2 or (len(image.shape) == 3 and image.shape[2] == 1):
         image_bgr = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     else:
         raise HTTPException(status_code=400, detail="Invalid image format")
-
-    # Extract face representations using DeepFace
     try:
         face_representations = DeepFace.represent(
             image_bgr,
@@ -123,11 +107,10 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Face representation extraction failed: {e}")
-
+    if not face_representations or all(rep.get("face_confidence", 0) < 0.5 for rep in face_representations):
+        return {"recognized": "No face detected", "face_count": 0}
     recognized = []
     meal = get_current_meal(now)
-    
-    # For each extracted face, find a matching person based on cosine distance
     for rep in face_representations:
         embedding = np.array(rep["embedding"])
         best_match = None
@@ -163,7 +146,6 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
                 "category": None,
                 "first_seen_time": now.isoformat()
             })
-
     return {"recognized": recognized, "face_count": len(face_representations)}
 
 @router.post("/enroll")

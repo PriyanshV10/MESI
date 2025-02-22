@@ -42,7 +42,7 @@ def load_faces_from_directory(base_dir=DATABASE_PATH):
                                 enforce_detection=False,
                                 align=True
                             )
-                            if not representation:
+                            if not representation or all(rep.get("face_confidence", 0) < 0.5 for rep in representation):
                                 continue
                             encoding = np.array(representation[0]["embedding"])
                         except Exception as e:
