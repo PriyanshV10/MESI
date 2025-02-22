@@ -218,7 +218,7 @@ def rfid_entry(rfid: str = Form(...), db: Session = Depends(get_db)):
         db.commit()
     return {"status": "RFID entry logged", "name": person.name}
 
-@router.get("/dashboard")
+@router.post("/dashboard")
 def dashboard(username: str = Depends(verify_admin), db: Session = Depends(get_db)):
     entries = db.query(MessEntry).all()
     result = []
@@ -227,7 +227,7 @@ def dashboard(username: str = Depends(verify_admin), db: Session = Depends(get_d
         result.append({"entry_id": entry.id, "person_id": entry.person_id, "name": person.name if person else "Unknown", "meal_type": entry.meal_type, "entry_time": entry.entry_time.isoformat(), "source": entry.source})
     return {"entries": result}
 
-@router.get("/known_faces")
+@router.post("/known_faces")
 def get_known_faces(db: Session = Depends(get_db)):
     people = db.query(Person).all()
     result = []
@@ -235,13 +235,13 @@ def get_known_faces(db: Session = Depends(get_db)):
         result.append({"id": person.id, "college_id": person.college_id, "name": person.name, "category": person.category})
     return {"people": result}
 
-@router.get("/recent_entries")
+@router.post("/recent_entries")
 def recent_entries(db: Session = Depends(get_db)):
     threshold = datetime.utcnow() - timedelta(seconds=5)
     count = db.query(MessEntry).filter(MessEntry.entry_time >= threshold).count()
     return {"recent_count": count}
 
-@router.get("/meal_summary")
+@router.post("/meal_summary")
 def meal_summary(db: Session = Depends(get_db)):
     now = datetime.utcnow()
     meal = get_current_meal(now)
