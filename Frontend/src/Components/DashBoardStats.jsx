@@ -14,18 +14,34 @@ const DashboardStats = ({ data }) => {
     return today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
   };
 
+  // Dummy data for testing when data is empty
+  const dummyData = [
+    { entry_time: `${getTodayDate()}T08:15:00Z`, meal_type: "Breakfast" },
+    { entry_time: `${getTodayDate()}T09:30:00Z`, meal_type: "Breakfast" },
+    { entry_time: `${getTodayDate()}T13:00:00Z`, meal_type: "Lunch" },
+    { entry_time: `${getTodayDate()}T13:45:00Z`, meal_type: "Lunch" },
+    { entry_time: `${getTodayDate()}T17:00:00Z`, meal_type: "Snacks" },
+    { entry_time: `${getTodayDate()}T20:00:00Z`, meal_type: "Dinner" },
+    { entry_time: `${getTodayDate()}T20:30:00Z`, meal_type: "Dinner" },
+  ];
+
   useEffect(() => {
-    // Get today's date
     const todayDate = getTodayDate();
 
-    // Filter the data to include only today's records
-    const todayData = data.filter((item) => item.date === todayDate);
+    // Use dummy data if no real data is provided
+    const validData = data && data.entries && Array.isArray(data.entries) ? data.entries : dummyData;
 
-    // Calculate the statistics based on the filtered data
-    const breakfastCount = todayData.filter((item) => item.mealType === "breakfast").length;
-    const lunchCount = todayData.filter((item) => item.mealType === "lunch").length;
-    const dinnerCount = todayData.filter((item) => item.mealType === "dinner").length;
-    const snacksCount = todayData.filter((item) => item.mealType === "snacks").length;
+    // Filter data for today's records
+    const todayData = validData.filter((item) => {
+      const entryDate = item.entry_time.split("T")[0];
+      return entryDate === todayDate;
+    });
+
+    // Count each meal type
+    const breakfastCount = todayData.filter((item) => item.meal_type === "Breakfast").length;
+    const lunchCount = todayData.filter((item) => item.meal_type === "Lunch").length;
+    const dinnerCount = todayData.filter((item) => item.meal_type === "Dinner").length;
+    const snacksCount = todayData.filter((item) => item.meal_type === "Snacks").length;
 
     setStats({
       breakfast: breakfastCount,

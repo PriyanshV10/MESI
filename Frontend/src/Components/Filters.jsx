@@ -9,7 +9,7 @@ const FilterTray = () => {
     To: "",
     Meal: "",
   });
-  console.log(filters);
+  // console.log(filters);
   const [isClicked, setIsclicked] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
