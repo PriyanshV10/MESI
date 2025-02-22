@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 
 class BulkData(BaseModel):
@@ -11,7 +12,7 @@ class BulkData(BaseModel):
 
 class PersonSchema(BaseModel):
     id: int
-    college_id: str | None = None
+    college_id: Optional[str] = None
     name: str
     category: str
 

@@ -5,3 +5,4 @@ deepface
 numpy
 pillow
 python-multipart
+pyzbar
