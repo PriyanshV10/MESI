@@ -5,6 +5,7 @@ import { da } from "@faker-js/faker";
 function Fetch({ filters }) {
   console.log(filters);
   const [data , setData] = useState([]);
+  const interval = 5000;
   useEffect(() => {
     const fetchdata = async () => {
       try {
@@ -36,7 +37,10 @@ function Fetch({ filters }) {
         console.error("Error fetching data: ", error);
       }
     };
-    fetchdata();
+
+    const id = setInterval(fetchdata,interval);
+    return () => clearInterval(id);
+
   }, [filters]);
 
   return <Table data={data}/>

@@ -3,7 +3,7 @@ import React from "react";
 const LoginPage = () => {
   return (
     <>
-      <section className="bg-orange-500 min-h-dvh">
+      <section className="bg-orange-400 min-h-dvh">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
           <div className="flex items-center mb-6 text-4xl font-semibold text-white">
             Mess Management

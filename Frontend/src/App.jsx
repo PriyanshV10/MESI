@@ -8,12 +8,13 @@ import Details from "./Components/Details";
 import FilterTray from "./Components/Filters";
 import WebcamCapture from "./Components/Webcam";
 import UploadPhotos from "./Components/UploadPhotos";
+import Webcam from "react-webcam";
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <><FilterTray /><Fetch/> <UploadPhotos /></>
+      element: <><LoginPage/></>
     },
     {
       path: "/login",
@@ -21,7 +22,7 @@ function App() {
     },
     {
       path: "/connect",
-      element: <><Navbar/> <h1 className="text-center">Camera Connected</h1></>
+      element: <><Navbar/> <UploadPhotos /></>
     },
     {
       path: "/home",
