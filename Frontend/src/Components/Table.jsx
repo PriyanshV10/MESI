@@ -1,11 +1,14 @@
 import "../styles/Tables.css";
 
 function Table({ data }) {
-  if (!data || data.length === 0) {
-    return <p className="text-center text-gray-500">No filter applied</p>;
-  }
 
-  console.log(data);
+  if (data.length === 0 || data === null) {
+    return (
+      <p className="flex justify-center h-screen text-xl text-gray-600">
+        Nothing to fetch
+      </p>
+    );
+  }
   const headings = Object.keys(data[0]);
   console.log(data[10]);
 
@@ -25,7 +28,7 @@ function Table({ data }) {
         <tbody>
           {data.map((row, rowIndex) => (
             <tr
-            key={row.id || rowIndex}
+              key={row.id || rowIndex}
               className="bg-white border-b border-orange-300 hover:bg-orange-100"
             >
               {headings.map((header, cellIndex) => (
