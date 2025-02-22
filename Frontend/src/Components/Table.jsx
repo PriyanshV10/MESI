@@ -3,21 +3,23 @@ import "../styles/Tables.css";
 
 function Table({ data }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Default rows per page
-  const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" }); // Default sort by date and time in descending order
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "desc",
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (data) {
-      setLoading(false); // Data has been fetched
+      setLoading(false);
     }
   }, [data]);
 
   useEffect(() => {
-    setCurrentPage(1); // Reset to page 1 when sorting changes
+    setCurrentPage(1);
   }, [sortConfig]);
 
-  // Handle case where data is not available or still loading
   if (loading) {
     return (
       <p className="flex justify-center h-screen text-xl text-gray-600">
@@ -33,7 +35,6 @@ function Table({ data }) {
   const headings = Object.keys(data[0]);
   const totalPages = Math.ceil(data.length / rowsPerPage);
 
-  // Sorting function
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -42,58 +43,32 @@ function Table({ data }) {
     setSortConfig({ key, direction });
   };
 
-  // Sorting logic (by date first, then time)
   const sortedData = [...data].sort((a, b) => {
     if (sortConfig.key === "date") {
-      // Compare by date
-      const aDate = new Date(a.date); // Assuming 'date' is in YYYY-MM-DD format
+      const aDate = new Date(a.date);
       const bDate = new Date(b.date);
-      if (aDate !== bDate) {
-        return sortConfig.direction === "asc" ? aDate - bDate : bDate - aDate;
-      }
-
-      // If dates are the same, compare by time
-      const [aHours, aMinutes, aSeconds] = a.time.split(":").map(Number); // Split time into hours, minutes, and seconds
-      const [bHours, bMinutes, bSeconds] = b.time.split(":").map(Number); // Split time into hours, minutes, and seconds
-
-      // Compare hours, then minutes, then seconds
-      if (aHours !== bHours) {
-        return sortConfig.direction === "asc" ? aHours - bHours : bHours - aHours;
-      }
-      if (aMinutes !== bMinutes) {
-        return sortConfig.direction === "asc" ? aMinutes - bMinutes : bMinutes - aMinutes;
-      }
-      return sortConfig.direction === "asc" ? aSeconds - bSeconds : bSeconds - aSeconds;
+      return sortConfig.direction === "asc" ? aDate - bDate : bDate - aDate;
     }
-
-    // Default sorting if it's not by date
     return 0;
   });
 
-  // Reset to page 1 when rowsPerPage changes
   const handleRowsPerPageChange = (e) => {
     setRowsPerPage(Number(e.target.value));
     setCurrentPage(1);
   };
 
-  // Get the current page's data
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentData = sortedData.slice(startIndex, startIndex + rowsPerPage);
 
   return (
-    <div className="relative overflow-x-auto shadow-md sm:rounded-lg w-full flex-col">
-      {/* Top Controls (Aligned with Table) */}
-      <div className="flex justify-between items-center px-4 py-2 bg-white border-b border-gray-300">
-        {/* Total Rows Count (Left) */}
-        <span className="text-gray-700 font-semibold text-lg">
-          Total Rows: {data.length}
-        </span>
+    <div className="relative overflow-x-auto shadow-lg sm:rounded-lg w-full bg-white text-gray-900 flex-col">
+      <div className="flex justify-between items-center px-4 py-2   rounded-t-lg border-b border-blue-400 ">
+        <span className="font-semibold text-lg">Total Rows: {data.length}</span>
 
-        {/* Rows Per Page Dropdown (Right) */}
         <div className="flex items-center gap-2">
-          <label className="text-gray-700 text-sm">Rows per page:</label>
+          <label className="text-sm">Rows per page:</label>
           <select
-            className="px-2 py-1 border border-gray-300 rounded-md text-gray-700"
+            className="px-2 py-1 border border-blue-300 bg-white text-gray-900 rounded-md"
             value={rowsPerPage}
             onChange={handleRowsPerPageChange}
           >
@@ -105,17 +80,23 @@ function Table({ data }) {
         </div>
       </div>
 
-      {/* Table */}
-      <table className="w-full text-md text-left text-gray-700">
-        <thead className="text-sm uppercase bg-orange-500 text-white">
+      <table className="w-full text-md text-left border border-gray-300">
+        <thead className="text-sm uppercase bg-blue-500 text-white">
           <tr>
             {headings.map((header) => (
               <th
                 key={header}
-                className={`px-8 py-4 text-md cursor-pointer ${sortConfig.key === header ? "bg-orange-600" : ""}`}
+                className={`px-6 py-4 cursor-pointer transition border border-gray-300 ${
+                  sortConfig.key === header ? "bg-blue-600" : ""
+                }`}
                 onClick={() => handleSort(header)}
               >
-                {header} {sortConfig.key === header ? (sortConfig.direction === "asc" ? "▲" : "▼") : ""}
+                {header}{" "}
+                {sortConfig.key === header
+                  ? sortConfig.direction === "asc"
+                    ? "▲"
+                    : "▼"
+                  : ""}
               </th>
             ))}
           </tr>
@@ -124,7 +105,7 @@ function Table({ data }) {
           {currentData.map((row, rowIndex) => (
             <tr
               key={row.id || rowIndex}
-              className="bg-white border-b border-orange-300 hover:bg-orange-100"
+              className="bg-white border-b border-gray-300 hover:bg-blue-100 transition"
             >
               {headings.map((header, cellIndex) => (
                 <td key={cellIndex} className="px-6 py-4">
@@ -136,25 +117,25 @@ function Table({ data }) {
         </tbody>
       </table>
 
-      {/* Pagination Controls Below Table */}
-      <div className="relative flex justify-center items-center mt-4 py-4 px-4">
-        {/* Pagination Controls (Centered) */}
+      <div className="flex justify-center items-center mt-4 py-4 px-4">
         <div className="flex items-center gap-4">
           <button
-            className="px-4 py-2 bg-orange-500 text-white rounded-md disabled:opacity-50"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-400 disabled:opacity-50 transition"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Previous
           </button>
 
-          <span className="text-gray-700 font-semibold">
+          <span className="font-semibold">
             Page {currentPage} of {totalPages}
           </span>
 
           <button
-            className="px-4 py-2 bg-orange-500 text-white rounded-md disabled:opacity-50"
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-400 disabled:opacity-50 transition"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
           >
             Next
