@@ -3,48 +3,31 @@ import { NavLink } from "react-router-dom";
 
 const Navbar = () => {
   return (
-    <nav className="w-full px-10 py-4 bg-orange-400 text-white flex items-center justify-between">
-      {/* Logo / Brand Name */}
-      <div className="text-2xl font-semibold">Mess Management</div>
+    <nav className="w-full px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white flex items-center justify-between shadow-lg ">
+    
+      <div className="text-2xl font-semibold tracking-wide px-4">
+        Mess Management
+      </div>
 
-      {/* Navigation Links */}
       <ul className="flex gap-6 text-lg">
-        <NavLink
-          to="/home"
-          className={({ isActive }) =>
-            `relative transition duration-300 hover:text-gray-200 ${
-              isActive ? "underline decoration-2 underline-offset-4" : ""
-            }`
-          }
-        >
-          Home
-        </NavLink>
-        <NavLink
-          to="/table"
-          className={({ isActive }) =>
-            `relative transition duration-300 hover:text-gray-200 ${
-              isActive ? "underline decoration-2 underline-offset-4" : ""
-            }`
-          }
-        >
-          Table
-        </NavLink>
-        <NavLink
-          to="/connect"
-          className={({ isActive }) =>
-            `relative transition duration-300 hover:text-gray-200 ${
-              isActive ? "underline decoration-2 underline-offset-4" : ""
-            }`
-          }
-        >
-          Connect Camera
-        </NavLink>
+        {["Home", "Table", "Connect Camera"].map((name, index) => (
+          <NavLink
+            key={index}
+            to={`/${name.replaceAll(" ","-")}`}
+            className={({ isActive }) =>
+              `relative px-4 py-2 rounded-md transition duration-300 hover:bg-blue-600 ${
+                isActive ? "bg-blue-800" : ""
+              }`
+            }
+          >
+            {name}
+          </NavLink>
+        ))}
       </ul>
 
-      {/* Account Section */}
-      <div className="text-lg font-medium hover:scale-105 transition duration-300 cursor-pointer">
+      <button className="bg-white text-blue-600 font-medium px-4 py-2 rounded-md hover:bg-blue-200 transition duration-300 shadow-sm">
         Account
-      </div>
+      </button>
     </nav>
   );
 };

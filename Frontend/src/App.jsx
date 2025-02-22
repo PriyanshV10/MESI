@@ -20,7 +20,7 @@ function App() {
       element: <><LoginPage/></>
     },
     {
-      path: "/connect",
+      path: "/connect-camera",
       element: <><Navbar/> <UploadPhotos /></>
     },
     {
@@ -34,7 +34,7 @@ function App() {
   ])
   return (
     <>
-      <RouterProvider router={router} />
+      <RouterProvider router={router}  />
     </>
   );
 }
