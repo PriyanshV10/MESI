@@ -49,6 +49,8 @@ async def upload_frame(request: Request, db: Session = Depends(get_db)):
         img_base64 = data.get("image")
         if not img_base64:
             raise HTTPException(status_code=400, detail="No image provided")
+        if img_base64.startswith("data:"):
+            img_base64 = img_base64.split("base64,")[-1]
         try:
             file_content = base64.b64decode(img_base64)
         except Exception as e:
